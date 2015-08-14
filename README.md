@@ -15,8 +15,41 @@ I did not try to leverage to complete Trello API but focused on searching for ca
 Now it is a breeze to pipe Trello search results to your shell scripts or help your "stuck-in-the-spreadsheet-era" colleagues
 to convert a list of several dozen Trello cards to their beloved Excel sheet. :-)
 
+## The Source Code
 
-### Quick-Start
+Is a work in progress (read _'terrible mess'_ <g>) at the moment. One of the design considerations was to stay as self-contained as possible and use
+only stuff from the Go standard lib, if possible. I also wanted to keep everything in one file so people who are not
+fill-time developers don't habe to wrap their head around a dozen source files. After all, it's less than 1 kLOC!
+Now that the functionality looks right, I'll start to refactor. `go vet` and `golint` are quite satisfied at the moment.
+Primary purpose was to have a command line search tool for Trello for a personal project and to get rid of _"could you please
+make an Excel sheet out of these Trello cards"_ requests at work.
+
+## Authenticating with the Trello API
+
+`tres` uses environment variables to read your Trello API key and your Trello token. If these are not set, the tool
+will exit with an error message. You need
+
+ * TRELLO_KEY -- your Trello API key
+ * TRELLO_TOKEN -- your Trello API token (read only is enough)
+
+Optional
+
+ * TRELLO_USER -- your user name matching the token. The default is "me", which should be ok for 99% of the time.
+
+You can find out how to generate your key and a token at https://trello.com/docs/gettingstarted/index.html#getting-an-application-key
+
+Mac / *nix / Linux (put this in your bash_profile or .bashrc file)
+
+    export TRELLO_KEY=your_api_key_goes_here
+    export TRELLO_TOKEN=your_token_string_goes_here
+
+Windows (set these in System Settings or use the `setx` command)
+
+    TRELLO_KEY=your_api_key_goes_here
+    TRELLO_TOKEN=your_token_string_goes_here
+
+
+## Quick-Start
 
 You need a CSV file of all Trello cards in your board "Recruiting" that have a label "PhoneInterview" assigned. You co-worker
 asked you to provide the name, the date of the last activity and a link to the card.
@@ -36,6 +69,13 @@ As you see from the options that
 
 The command `search`, followed by the search term tells the `tres` tool what to search for.
 Search syntax is exactly what you would enter in the Trello search edit field in the browser.
+
+**Important!** `tres` always writes to the standard output to allow easy piping and output redirection.
+This means that also the "excel" output format will be written to StdOut! You have to redirect this
+to a file or you will just see garbled stuff on the console. ;-) Do it like so:
+
+    ./tres --format excel --fields "name,shorturl"  search 'board:"Welcome Board" list:"Basic Stuff" '  > file.xlsx
+
 
 ### Usage Message
 
