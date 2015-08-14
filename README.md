@@ -19,7 +19,7 @@ to convert a list of several dozen Trello cards to their beloved Excel sheet. :-
 
 Is a work in progress (read _'terrible mess'_ <g>) at the moment. One of the design considerations was to stay as self-contained as possible and use
 only stuff from the Go standard lib, if possible. I also wanted to keep everything in one file so people who are not
-fill-time developers don't habe to wrap their head around a dozen source files. After all, it's less than 1 kLOC!
+full-time developers don't have to wrap their head around a dozen source files. After all, it's less than 1 kLOC!
 Now that the functionality looks right, I'll start to refactor. `go vet` and `golint` are quite satisfied at the moment.
 Primary purpose was to have a command line search tool for Trello for a personal project and to get rid of _"could you please
 make an Excel sheet out of these Trello cards"_ requests at work.
@@ -51,7 +51,7 @@ Windows (set these in System Settings or use the `setx` command)
 
 ## Quick-Start
 
-You need a CSV file of all Trello cards in your board "Recruiting" that have a label "PhoneInterview" assigned. You co-worker
+You need a CSV file of all Trello cards in your board "Recruiting" that have a label "PhoneInterview" assigned. Your  co-worker
 asked you to provide the name, the date of the last activity and a link to the card.
 
     ./tres --format csv --fields "name,datelastactivity,shorturl"  search 'board:"Welcome Board" #Green'
