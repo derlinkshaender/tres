@@ -334,7 +334,6 @@ func (client *TrelloClient) SearchCards(query string, limit int) ([]*TrelloCardS
 		"query":       query,
 	}
 	theURL := client.prepareQuery("/1/search", q)
-	fmt.Println(theURL.String())
 	result := TrelloSearchResult{}
 	resp, err := client.HTTPClient.Get(theURL.String())
 	err = processResponse(resp, err, &result)
