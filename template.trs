@@ -1,0 +1,16 @@
+// this is a sample query
+
+// everything you define with an "at" command
+// will override command line parameters
+
+@fields listname, name, labels
+@format csv
+@colsep | // lets just have a pipe as delimiter
+
+
+board:"Welcome Board"
+and (
+  #LabelName OR
+  edited:week
+)
+

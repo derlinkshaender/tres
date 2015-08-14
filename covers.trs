@@ -1,0 +1,7 @@
+// display a list of cards with a cover
+
+@fields listname, name, labels
+@format csv
+@colsep ;
+
+board:"Welcome Board" AND has:cover
