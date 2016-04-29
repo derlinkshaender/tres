@@ -48,13 +48,43 @@ Windows (set these in System Settings or use the `setx` command)
     TRELLO_KEY=your_api_key_goes_here
     TRELLO_TOKEN=your_token_string_goes_here
 
+## Installation
+
+### From source
+
+To build tres from the source code yourself you need to have a working Go environment installed.
+
+```bash
+$ go install github.com/derlinkshaender/tres/cmd/tres
+```
+
+### Just give me the binary!
+
+If you do not want to compile `tres` yourself or are in a hurry,
+I provide compiled version for Mac OS X (darwin/amd64) and Windows (windows/386 and (windows/amd64) on my home page.
+Here are the links:
+
+ * Mac OS X [Download](http://www.arminhanisch.de/downloads/tres/macosx.zip)<br>
+   MD5 hash: 7b6b04df1670ed3eea4fb2356274f15c
+ * Windows 386 [Download](http://www.arminhanisch.de/downloads/tres/win32.zip)<br>
+   MD5 hash: 43a921a17acd2527c1e0637fe8ff0a8b
+ * Windows amd64 [Download](http://www.arminhanisch.de/downloads/tres/win64.zip)<br>
+   MD5 hash: cc48e97d63b7162609a961360d144368
+
+Please note: I work on a Mac, the builds above have been cross-compiled using Go 1.4.2,
+USAGE OF THESE BINARIES IS AT YOUR OWN RISK, THE SOFTWARE IS PROVIDED "AS IS",
+WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
+THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
+OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## Quick-Start
 
 You need a CSV file of all Trello cards in your board "Recruiting" that have a label "PhoneInterview" assigned. Your  co-worker
 asked you to provide the name, the date of the last activity and a link to the card.
 
-    ./tres --format csv --fields "name,datelastactivity,shorturl"  search 'board:"Welcome Board" #Green'
+    tres --format csv --fields "name,datelastactivity,shorturl"  search 'board:"Welcome Board" #Green'
 
 That was easy! Here's the output (note that the links have been changed to point to nothing)
 
@@ -74,7 +104,7 @@ Search syntax is exactly what you would enter in the Trello search edit field in
 This means that also the "excel" output format will be written to StdOut! You have to redirect this
 to a file or you will just see garbled stuff on the console. ;-) Do it like so:
 
-    ./tres --format excel --fields "name,shorturl"  search 'board:"Welcome Board" list:"Basic Stuff" '  > file.xlsx
+    tres --format excel --fields "name,shorturl"  search 'board:"Welcome Board" list:"Basic Stuff" '  > file.xlsx
 
 
 ### Usage Message
@@ -122,26 +152,3 @@ Executing `tres` without parameters or with `--help` displays the help screen be
 ## Detailed Documentation
 
 You can find more detailed documentation in the markdown file `reference.md` in this repo.
-
-## Just give me the binary!
-
-If you do not want to compile `tres` yourself or are in a hurry,
-I provide compiled version for Mac OS X (darwin/amd64) and Windows (windows/386 and (windows/amd64) on my home page.
-Here are the links:
-
- * Mac OS X [Download](http://www.arminhanisch.de/downloads/tres/macosx.zip)<br>
-   MD5 hash: 7b6b04df1670ed3eea4fb2356274f15c
- * Windows 386 [Download](http://www.arminhanisch.de/downloads/tres/win32.zip)<br>
-   MD5 hash: 43a921a17acd2527c1e0637fe8ff0a8b
- * Windows amd64 [Download](http://www.arminhanisch.de/downloads/tres/win64.zip)<br>
-   MD5 hash: cc48e97d63b7162609a961360d144368
-
-Please note: I work on a Mac, the builds above have been cross-compiled using Go 1.4.2,
-USAGE OF THESE BINARIES IS AT YOUR OWN RISK, THE SOFTWARE IS PROVIDED "AS IS",
-WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
-OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
