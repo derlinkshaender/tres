@@ -1,4 +1,4 @@
-package main
+package tres
 
 import (
 	"bytes"
@@ -23,7 +23,7 @@ type TrelloName struct {
 
 type TrelloNameList []*TrelloName
 
-type RuntimeConfig struct {
+type Config struct {
 	ShowUsage          bool
 	Command            string
 	SearchResultFields string
@@ -43,7 +43,33 @@ type TrelloClient struct {
 	HTTPClient   *http.Client
 	TrelloBoards TrelloNameList
 	TrelloLists  map[string]TrelloNameList
-	config       *RuntimeConfig
+	config       *Config
+}
+
+// NewTrelloClient allocates new TrelloClient and reads environment variables.
+func NewTrelloClient(c *Config) *TrelloClient {
+	client := &TrelloClient{
+		HTTPClient:  &http.Client{},
+		TrelloLists: make(map[string]TrelloNameList),
+		config:      c,
+	}
+
+	key := os.ExpandEnv("$TRELLO_KEY")
+	if key == "" {
+		fmt.Println("TRELLO_KEY environment variable not set, exiting.")
+		os.Exit(1)
+	} else {
+		client.TrelloKey = key
+	}
+	tok := os.ExpandEnv("$TRELLO_TOKEN")
+	if key == "" {
+		fmt.Println("TRELLO_TOKEN environment variable not set, exiting.")
+		os.Exit(1)
+	} else {
+		client.TrelloToken = tok
+	}
+
+	return client
 }
 
 type TrelloBadges struct {
@@ -174,30 +200,6 @@ type TrelloList struct {
 	Position float64 `json:"pos"`
 }
 
-func newTrelloClient() *TrelloClient {
-	client := &TrelloClient{}
-	client.HTTPClient = &http.Client{}
-	client.config = &RuntimeConfig{}
-	client.TrelloLists = make(map[string]TrelloNameList)
-
-	key := os.ExpandEnv("$TRELLO_KEY")
-	if key == "" {
-		fmt.Println("TRELLO_KEY environment variable not set, exiting.")
-		os.Exit(1)
-	} else {
-		client.TrelloKey = key
-	}
-	tok := os.ExpandEnv("$TRELLO_TOKEN")
-	if key == "" {
-		fmt.Println("TRELLO_TOKEN environment variable not set, exiting.")
-		os.Exit(1)
-	} else {
-		client.TrelloToken = tok
-	}
-
-	return client
-}
-
 func IDFromName(name string, nameList TrelloNameList) string {
 	for _, v := range nameList {
 		if strings.ToUpper(v.Name) == strings.ToUpper(name) {
@@ -293,7 +295,7 @@ func (client *TrelloClient) CreateList(boardID, listName, position string) (*Tre
 	return result, err
 }
 
-func (client *TrelloClient) BoardMembers(boardID string) ([]*TrelloMember, error) {
+func (client *TrelloClient) FetchBoardMembers(boardID string) ([]*TrelloMember, error) {
 	q := map[string]string{
 		"fields": "all",
 	}
@@ -340,7 +342,7 @@ func (client *TrelloClient) SearchCards(query string, limit int) ([]*TrelloCardS
 	return result.Cards, err
 }
 
-func (client *TrelloClient) loadBoardInfo() error {
+func (client *TrelloClient) FetchBoardInfo() error {
 	var err error
 
 	trelloUser := os.ExpandEnv("$TRELLO_USER")
@@ -529,17 +531,19 @@ func (client *TrelloClient) formatterJSON(cards []*TrelloCardSearchResult) error
 	return err
 }
 
-func (client *TrelloClient) formatterExcel(cards []*TrelloCardSearchResult) error {
-	var err error
-
-	var file *xlsx.File
-	var sheet *xlsx.Sheet
-	var row *xlsx.Row
-	var cell *xlsx.Cell
+func (client *TrelloClient) formatterExcel(cards []*TrelloCardSearchResult) (err error) {
+	var (
+		file  *xlsx.File
+		sheet *xlsx.Sheet
+		row   *xlsx.Row
+		cell  *xlsx.Cell
+	)
 
 	client.config.QuoteChar = "" // we do not need quoting in excel
 	file = xlsx.NewFile()
-	sheet = file.AddSheet("Sheet1")
+	if sheet, err = file.AddSheet("Sheet1"); err != nil {
+		return
+	}
 	for _, card := range cards {
 		row = sheet.AddRow()
 		for _, column := range client.buildOutputLine(card) {
@@ -709,15 +713,18 @@ func (client *TrelloClient) memberFormatterCsv(members []*TrelloMember) error {
 	return err
 }
 
-func (client *TrelloClient) memberFormatterExcel(members []*TrelloMember) error {
-	var err error
-	var file *xlsx.File
-	var sheet *xlsx.Sheet
-	var row *xlsx.Row
-	var cell *xlsx.Cell
+func (client *TrelloClient) memberFormatterExcel(members []*TrelloMember) (err error) {
+	var (
+		file  *xlsx.File
+		sheet *xlsx.Sheet
+		row   *xlsx.Row
+		cell  *xlsx.Cell
+	)
 	client.config.QuoteChar = "" // we do not need quoting in excel
 	file = xlsx.NewFile()
-	sheet = file.AddSheet("Sheet1")
+	if sheet, err = file.AddSheet("Sheet1"); err != nil {
+		return
+	}
 	header := strings.Split(client.config.SearchResultFields, ",")
 	row = sheet.AddRow()
 	for _, column := range header {
@@ -860,7 +867,7 @@ func (client *TrelloClient) loadQuery(filename string) (string, error) {
 	return client.parseQuery(string(data))
 }
 
-func (client *TrelloClient) cmdSearch() error {
+func (client *TrelloClient) Search() error {
 	var err error
 	query := flag.Arg(flag.NArg() - 1)
 	limit := client.config.CardLimit
@@ -885,11 +892,11 @@ func (client *TrelloClient) cmdSearch() error {
 	return err
 }
 
-func (client *TrelloClient) cmdMembers() error {
+func (client *TrelloClient) FetchAllMembers() error {
 	var err error
 	board := flag.Arg(flag.NArg() - 1)
 	boardID := IDFromName(board, client.TrelloBoards)
-	members, err := client.BoardMembers(boardID)
+	members, err := client.FetchBoardMembers(boardID)
 	if err != nil {
 	} else {
 		err = client.outputMembers(members, client.config.Format)
@@ -897,7 +904,7 @@ func (client *TrelloClient) cmdMembers() error {
 	return err
 }
 
-func (client *TrelloClient) cmdBoards() error {
+func (client *TrelloClient) FetchAllBoards() error {
 	var err error
 	format := strings.ToLower(client.config.Format)
 	if format == "excel" || format == "markdown" || format == "json" {
@@ -911,92 +918,4 @@ func (client *TrelloClient) cmdBoards() error {
 		fmt.Println()
 	}
 	return err
-}
-
-func showUsage() {
-	fmt.Println(`
-tres -- Trello Search for the command line
-
-Usage: tres [options] [command]
-
-Commands:
-    search              'trello_search_query' | <filename>
-                        see http://help.trello.com/article/808-searching-for-cards-all-boards
-                        literal search query must be enclosed in single quotes
-                        filename must contain a literal query without single quotes
-    members "<name>"    retrieve members of the specified board
-    boards              retrieve board name/id and and list name/id for each board
-
-Options:  
-    --colsep <string>   set column separator for result columns
-    --rowsep <string>   set row separator for result lines
-    --fields <string>   a comma-separated list of result field names for a search 
-    --format <string>   specify output format (one of: text|excel|csv|json|markdown)
-    --limit <n>         limit number of resulting cards (default 200)
-
-List of field names:
-    attachmentcount     hasdesc             labelcolors
-    boardname           id                  labels
-    checked             idattachmentcover   listname
-    closed              idboard             name
-    commentcount        idchecklists        pos
-    comments            idlabels            shortlink
-    datelastactivity    idlist              shorturl
-    desc                idmembers           subscribed
-    due                 idmembersvoted      url
-    email               idshort
-
-Environment vars used:
-    TRELLO_KEY          your Trello API key
-    TRELLO_TOKEN        your Trello API token
-    TRELLO_USER         optional (defaults to "me"), you Trello API user name
-
-If anything goes wrong, the tool exits with a return code of 1.
-
-	`)
-}
-
-func main() {
-	var err error
-	trello := newTrelloClient()
-
-	flag.BoolVar(&trello.config.ShowUsage, "help", false, "Display help message")
-	flag.StringVar(&trello.config.ColSep, "colsep", "\t", "column separator for search fields")
-	flag.StringVar(&trello.config.RowSep, "rowsep", "\n", "row separator for result lines")
-	flag.StringVar(&trello.config.QuoteChar, "quotechar", "", "quote string for columns")
-	flag.StringVar(&trello.config.SearchResultFields, "fields", "name", "list of result field names")
-	flag.StringVar(&trello.config.Format, "format", "text", "output format (text|excel|csv|json|markdown)")
-	flag.IntVar(&trello.config.CardLimit, "limit", 200, "limit of cards to retrieve")
-	flag.BoolVar(&trello.config.NumberOutput, "number", false, "display row numbers for output lines")
-	flag.StringVar(&trello.config.BoardName, "board", "", "")
-	flag.StringVar(&trello.config.ListName, "list", "", "")
-	flag.Parse()
-
-	if trello.config.ShowUsage || len(flag.Args()) == 0 {
-		showUsage()
-		os.Exit(1)
-	}
-
-	trello.config.Command = strings.ToLower(strings.TrimSpace(flag.Args()[0]))
-	type errFunc func() error
-	cmds := map[string]errFunc{
-		"search":  trello.cmdSearch,
-		"members": trello.cmdMembers,
-		"boards":  trello.cmdBoards,
-	}
-
-	f, present := cmds[trello.config.Command]
-	if present {
-		err = trello.loadBoardInfo()
-		if err == nil {
-			err = f()
-		}
-	} else {
-		err = errors.New("Unknown command " + trello.config.Command)
-	}
-
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
 }

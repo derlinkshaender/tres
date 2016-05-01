@@ -22,9 +22,7 @@ _testmain.go
 *.exe
 *.test
 *.prof
-*.zip
-
-tres
+*.zipg
 
 ## Directory-based project format:
 .idea/
