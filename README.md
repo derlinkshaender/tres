@@ -1,7 +1,7 @@
 
 # tres -- search Trello from the command line
 
-## What is this? Why is this?
+## What is this? Why does this tool exist?
 
 [Trello](http://www.trello.com) is one of these tools where you ask yourself how you could ever work without it, if you know it.
 I use it at work, for my private projects and generally regard its combination of usability, ease of use and great API one
